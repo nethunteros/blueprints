@@ -33,7 +33,7 @@ done
 # Make sure the usual locations are in PATH
 export PATH=$PATH:/usr/sbin:/usr/bin:/sbin:/bin
 
-MIRROR=${MIRROR:-http.kali.org}
+MIRROR=${MIRROR:-http://repo.kali.org/kali}
 LOCALSTATEDIR="/var"
 LXC_TEMPLATE_CONFIG="/usr/share/lxc/config"
 
@@ -218,7 +218,7 @@ kali-defaults,\
 kali-menu,\
 kali-root-login,\
 fonts-croscore,\
-fonts-crosextra-caladea,\ 
+fonts-crosextra-caladea,\
 fonts-crosextra-carlito,\
 gnome-theme-kali,\
 gtk3-engines-xfce,\
@@ -247,7 +247,7 @@ xserver-xorg-input-synaptics
     echo "Downloading debian minimal ..."
     qemu-debootstrap --verbose --variant=minbase --arch=$arch \
         --include=$packages \
-        "$release" "$cache/partial-$release-$arch" $MIRROR /usr/share/debootstrap/scripts/kali
+        "$release" "$cache/partial-$release-$arch" $MIRROR #/usr/share/debootstrap/scripts/kali
     if [ $? -ne 0 ]; then
         echo "Failed to download the rootfs, aborting."
         return 1
