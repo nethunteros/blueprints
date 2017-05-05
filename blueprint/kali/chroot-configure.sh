@@ -24,14 +24,9 @@ vim-tiny
 firefox-esr
 ristretto"
 
-readonly RECOMMENDS="$RECOMMENDS_MIN
-libreoffice-writer
-libreoffice-calc
-libreoffice-impress"
-
 install () {
     # first install "Recommends" since we overwrite some /etc config files
-    apt-get -y install $RECOMMENDS
+    apt-get -y install $RECOMMENDS_MIN
 
     # install maru package (this will always return failed exit status)
     dpkg -i maru_* || true
@@ -49,11 +44,6 @@ install_minimal () {
 
     # install all missing packages in "Depends"
     apt-get -y --allow-unauthenticated install --no-install-recommends -f
-
-    # HACK for now to skip libreoffice launcher icons
-    mv /home/maru/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel-minimal.xml \
-        /home/maru/.config/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
-    chown -R maru:maru /home/maru/.config
 }
 
 OPT_MINIMAL=false
@@ -73,7 +63,7 @@ done
 
 # some versions of LXC set a random root password,
 # so ensure the password is set to 'root'
-echo "root:root" | chpasswd
+echo "root:toor" | chpasswd
 
 #
 # install packages

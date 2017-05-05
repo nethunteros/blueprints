@@ -15,9 +15,9 @@
 # limitations under the License.
 #
 
-readonly BLUEPRINT_NAME="DEBIAN"
+readonly BLUEPRINT_NAME="KALI"
 
-readonly DEFAULT_RELEASE="jessie"
+readonly DEFAULT_RELEASE="kali-rolling"
 readonly DEFAULT_ARCH="armhf"
 
 readonly DEFAULT_MARU_RELEASE="testing"
@@ -25,10 +25,24 @@ readonly DEFAULT_MARU_RELEASE="testing"
 # tweaks to upstream template, must be absolute path
 # note: this is only used because older versions of LXC do not support
 # cross-debootstrapping in the debian template
-readonly LXC_TEMPLATE_OVERRIDE="$(pwd)/lxc/templates/debian.sh"
+readonly LXC_TEMPLATE_OVERRIDE="$(pwd)/lxc/templates/kali.sh"
 
 # script to run inside the chroot
 readonly CHROOT_SCRIPT="chroot-configure.sh"
+
+# Get deboostrap for kali
+if [ ! -f "/usr/share/debootstrap/scripts/kali-rolling" ]; then
+    
+    # For those not building on Kali
+    echo "Missing kali from debootstrap"
+
+    curl "http://git.kali.org/gitweb/?p=packages/debootstrap.git;a=blob_plain;f=scripts/kali;h=50d7ef5b4e9e905cc6da8655416cdf3ef559911e;hb=refs/heads/kali/master" > /usr/share/debootstrap/scripts/kali
+    ln -s /usr/share/debootstrap/scripts/kali /usr/share/debootstrap/scripts/kali-rolling
+
+    wget http://repo.kali.org/kali/pool/main/k/kali-archive-keyring/kali-archive-keyring_2015.2_all.deb
+    dpkg -i kali-archive-keyring_2015.2_all.deb
+    apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
+fi
 
 pecho () {
     echo "[ $BLUEPRINT_NAME ] $1"
@@ -36,12 +50,12 @@ pecho () {
 
 print_help () {
     cat <<EOF
-Blueprint for building Debian images.
+Blueprint for building Kali images.
 
-Debian-specific options:
+Kali-specific options:
 
-    -r, --release   Debian release to use as the image base.
-                    Defaults to jessie.
+    -r, --release   Kali release to use as the image base.
+                    Defaults to kali-rolling.
 
     -a, --arch      Architecture of generated image.
                     Defaults to armhf.
@@ -83,7 +97,7 @@ EOF
 
     # make sure we have a dynamic mirror for installing packages
     cat > "${rootfs}/etc/apt/sources.list" <<EOF
-deb http://httpredir.debian.org/debian ${release} main
+deb http://http.kali.org/kali ${release} main contrib non-free
 EOF
 
     # add maru apt repository for installing dependencies

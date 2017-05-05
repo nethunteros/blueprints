@@ -22,17 +22,15 @@ To create your own blueprint, all you need to do is:
 4. Define the function `blueprint_cleanup` in plugin.sh that will clean up any
    intermediate build artifacts.
 
-See blueprint/debian as the canonical example for Debian.
-
 ### Examples
 
-Build a Debian Jessie armhf container called 'debian' (option defaults):
+Build a Kali armhf container called 'kali' (option defaults):
 
     # ./build.sh
 
-Build a Debian Jessie arm64 container called 'jessie64':
+Build a Kali arm64 container called 'kali-rolling64':
 
-    # ./build.sh -b debian -n jessie64 -- -a arm64
+    # ./build.sh -b kali -n kali-rolling -- -a arm64
 
 *Tip: You will need root privileges to mount binfmt_misc for bootstrapping
 foreign architecture containers.*

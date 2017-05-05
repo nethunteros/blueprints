@@ -34,8 +34,8 @@ Build container images for Maru OS
 
 Usage: build.sh [OPTIONS]
 
-    -b, --blueprint     Blueprint to use, currently only 'debian'.
-                        Defaults to debian.
+    -b, --blueprint     Blueprint to use, currently only 'kali'.
+                        Defaults to kali.
 
     -n, --name          Optional container name. Defaults to blueprint name.
                         This is used to set /etc/hostname in the rootfs.
@@ -66,7 +66,7 @@ cleanup () {
     fi
 }
 
-OPT_BLUEPRINT="debian"
+OPT_BLUEPRINT="kali"
 OPT_NAME="$OPT_BLUEPRINT"
 
 ARGS="$(getopt -o b:n:h --long blueprint:,name:,help -n 'build.sh' -- "$@")"

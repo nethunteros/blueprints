@@ -63,6 +63,7 @@ adduser "$USER" sdcard_rw
 # make sure root is added to Android's paranoid networking groups
 adduser root inet
 adduser root inet_raw
+adduser root sdcard_rw
 
 ## systemd ##
 
@@ -110,14 +111,6 @@ fi
 if [ -e /usr/share/applications/xfce4-session-logout.desktop ] ; then
     echo "Hidden=true" >> /usr/share/applications/xfce4-session-logout.desktop
 fi
-
-# custom applications panel
-# note: we are forced to overrride the default menu because desktop
-# left-click applications menu cannot use a custom menu file
-if [ -e  /etc/xdg/menus/xfce-applications.menu ] ; then
-    mv /etc/xdg/menus/xfce-applications.menu /etc/xdg/menus/xfce-applications.menu.backup
-fi
-mv /etc/xdg/menus/maru-applications.menu /etc/xdg/menus/xfce-applications.menu
 
 ### Firefox configuration ###
 

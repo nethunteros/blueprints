@@ -33,7 +33,7 @@ done
 # Make sure the usual locations are in PATH
 export PATH=$PATH:/usr/sbin:/usr/bin:/sbin:/bin
 
-MIRROR=${MIRROR:-http://http.debian.net/debian}
+MIRROR=${MIRROR:-http.kali.org}
 LOCALSTATEDIR="/var"
 LXC_TEMPLATE_CONFIG="/usr/share/lxc/config"
 
@@ -91,7 +91,7 @@ EOF
 
     # set the hostname
     cat <<EOF > $rootfs/etc/hostname
-$hostname
+kali
 EOF
 
     # reconfigure some services
@@ -127,7 +127,7 @@ EOF
         rm -f $rootfs/etc/ssh/ssh_host_*key*
 
         DPKG_MAINTSCRIPT_PACKAGE=openssh DPKG_MAINTSCRIPT_NAME=postinst chroot $rootfs /var/lib/dpkg/info/openssh-server.postinst configure
-        sed -i "s/root@$(hostname)/root@$hostname/g" $rootfs/etc/ssh/ssh_host_*.pub
+        sed -i "s/root@$(hostname)/root@kali/g" $rootfs/etc/ssh/ssh_host_*.pub
 
 	# Don't allow root login with password
 	sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" $rootfs/etc/ssh/sshd_config
@@ -151,10 +151,8 @@ EOF
         echo "Timezone in container is not configured. Adjust it manually."
     fi
 
-    password="$(dd if=/dev/urandom bs=6 count=1 2> /dev/null | base64)"
-
-    echo "root:$password" | chroot $rootfs chpasswd
-    echo "Root password is '$password', please change !"
+    echo "root:toor" | chroot $rootfs chpasswd
+    echo "Root password is toor, please change !"
 
     return 0
 }
@@ -209,13 +207,16 @@ download_debian()
     packages=\
 ifupdown,\
 locales,\
-libui-dialog-perl,\
 dialog,\
 isc-dhcp-client,\
 netbase,\
 net-tools,\
 iproute,\
-openssh-server
+openssh-server,\
+kali-archive-keyring,\
+kali-defaults,\
+kali-menu,\
+kali-root-login
 
     cache=$1
     arch=$2
@@ -233,7 +234,7 @@ openssh-server
     echo "Downloading debian minimal ..."
     qemu-debootstrap --verbose --variant=minbase --arch=$arch \
         --include=$packages \
-        "$release" "$cache/partial-$release-$arch" $MIRROR
+        "$release" "$cache/partial-$release-$arch" $MIRROR /usr/share/debootstrap/scripts/kali
     if [ $? -ne 0 ]; then
         echo "Failed to download the rootfs, aborting."
         return 1
@@ -265,7 +266,7 @@ copy_debian()
 
 install_debian()
 {
-    cache="$LOCALSTATEDIR/cache/lxc/debian"
+    cache="$LOCALSTATEDIR/cache/lxc/kali"
     rootfs=$1
     release=$2
     arch=$3
@@ -281,7 +282,7 @@ install_debian()
         if [ ! -e "$cache/rootfs-$release-$arch" ]; then
             download_debian $cache $arch $release
             if [ $? -ne 0 ]; then
-                echo "Failed to download 'debian base'"
+                echo "Failed to download 'kali' base'"
                 return 1
             fi
         fi
@@ -294,7 +295,7 @@ install_debian()
 
         return 0
 
-        ) 9>$LOCALSTATEDIR/lock/subsys/lxc-debian
+        ) 9>$LOCALSTATEDIR/lock/subsys/lxc-kali
 
     return $?
 }
@@ -334,7 +335,7 @@ copy_configuration()
 
     cat <<EOF >> $path/config
 lxc.mount = $path/fstab
-lxc.utsname = $hostname
+lxc.utsname = kali
 lxc.arch = $arch
 EOF
 
@@ -348,7 +349,7 @@ EOF
 
 clean()
 {
-    cache="$LOCALSTATEDIR/cache/lxc/debian"
+    cache="$LOCALSTATEDIR/cache/lxc/kali"
 
     if [ ! -e $cache ]; then
         exit 0
@@ -366,14 +367,14 @@ clean()
         rm --preserve-root --one-file-system -rf $cache && echo "Done." || exit 1
         exit 0
 
-    ) 9>$LOCALSTATEDIR/lock/subsys/lxc-debian
+    ) 9>$LOCALSTATEDIR/lock/subsys/lxc-kali
 }
 
 usage()
 {
     cat <<EOF
 $1 -h|--help -p|--path=<path> [-a|--arch] [-r|--release=<release>] [-c|--clean]
-release: the debian release (e.g. wheezy): defaults to current stable
+release: the kali release (e.g. kali-rolling): defaults to current stable
 arch: the container architecture (e.g. amd64): defaults to host arch
 EOF
     return 0
@@ -460,9 +461,10 @@ if [ "$(id -u)" != "0" ]; then
     exit 1
 fi
 
-current_release=`wget ${MIRROR}/dists/stable/Release -O - 2> /dev/null | head |awk '/^Codename: (.*)$/ { print $2; }'`
+# http://repo.kali.org/kali/dists/kali-rolling/Release
+current_release=`wget ${MIRROR}/dists/kali-rolling/Release -O - 2> /dev/null | head |awk '/^Codename: (.*)$/ { print $2; }'`
 release=${release:-${current_release}}
-valid_releases=('squeeze' 'wheezy' 'jessie' 'sid')
+valid_releases=('kali-rolling' 'sana' 'kali-bleeding-edge')
 if [[ ! "${valid_releases[*]}" =~ (^|[^[:alpha:]])$release([^[:alpha:]]|$) ]]; then
     echo "Invalid release ${release}, valid ones are: ${valid_releases[*]}"
     exit 1
@@ -481,13 +483,13 @@ fi
 
 install_debian $rootfs $release $arch
 if [ $? -ne 0 ]; then
-    echo "failed to install debian"
+    echo "failed to install kali"
     exit 1
 fi
 
 configure_debian $rootfs $name
 if [ $? -ne 0 ]; then
-    echo "failed to configure debian for a container"
+    echo "failed to configure kali for a container"
     exit 1
 fi
 
