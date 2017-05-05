@@ -216,7 +216,20 @@ openssh-server,\
 kali-archive-keyring,\
 kali-defaults,\
 kali-menu,\
-kali-root-login
+kali-root-login,\
+fonts-croscore,\
+fonts-crosextra-caladea,\ 
+fonts-crosextra-carlito,\
+gnome-theme-kali,\
+gtk3-engines-xfce,\
+kali-desktop-xfce,\
+lightdm,\
+network-manager,\
+network-manager-gnome,\
+xfce4,\
+xserver-xorg-video-fbdev,\
+xserver-xorg-input-evdev,\
+xserver-xorg-input-synaptics
 
     cache=$1
     arch=$2

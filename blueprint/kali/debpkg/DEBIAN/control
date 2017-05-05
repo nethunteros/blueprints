@@ -4,12 +4,7 @@ Section: x11
 Priority: optional
 Architecture: all
 Depends: libc6,
-    fonts-croscore, fonts-crosextra-caladea, 
-    fonts-crosextra-carlito, gnome-theme-kali, 
-    gtk3-engines-xfce, kali-desktop-xfce, kali-root-login, 
-    lightdm, network-manager, network-manager-gnome, xfce4, 
-    xserver-xorg-video-fbdev, xserver-xorg-input-evdev, 
-    xserver-xorg-input-synaptics, sudo, rsync, maru-mflinger-client
+    sudo, rsync, maru-mflinger-client
 Recommends: xfce4-terminal, xfce4-screenshooter,
     lxtask,
     vim,
