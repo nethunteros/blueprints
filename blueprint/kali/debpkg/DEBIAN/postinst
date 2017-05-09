@@ -36,17 +36,7 @@
 set -e
 set -u
 
-USER="maru"
-
-# create default user account
-if ! id -u "$USER" ; then
-    adduser --disabled-password --gecos "" "$USER"
-    # default password is username
-    echo "${USER}:${USER}" | chpasswd
-fi
-
-# sudo rights
-adduser "$USER" sudo
+USER="root"
 
 # internet access
 addgroup --gid 3003 inet || true
@@ -59,11 +49,6 @@ adduser "$USER" inet_raw
 # sdcard r/w permissions
 addgroup --gid 1015 sdcard_rw || true
 adduser "$USER" sdcard_rw
-
-# make sure root is added to Android's paranoid networking groups
-adduser root inet
-adduser root inet_raw
-adduser root sdcard_rw
 
 ## systemd ##
 
@@ -81,47 +66,6 @@ adduser root sdcard_rw
 PERSISTENT_NET_RULES="/etc/udev/rules.d/70-persistent-net.rules"
 if [ -f "$PERSISTENT_NET_RULES" ] ; then
     rm "$PERSISTENT_NET_RULES"
-fi
-
-### LightDM configuration ###
-
-if [ -e /etc/lightdm/lightdm.conf ] ; then
-    mv /etc/lightdm/lightdm.conf /etc/lightdm/lightdm.conf.backup
-
-    cat > /etc/lightdm/lightdm.conf <<EOF
-[SeatDefaults]
-autologin-user=$USER
-EOF
-fi
-
-### XFCE tweaks ###
-
-# make sure $USER owns everything
-chown -R "$USER":"$USER" /var/maru
-
-# sync home directory config and settings (trailing slash is important!)
-rsync -a /var/maru/ "/home/$USER"
-
-# remove Audio Mixer app
-if [ -e /usr/share/applications/xfce4-mixer.desktop ] ; then
-    echo "Hidden=true" >> /usr/share/applications/xfce4-mixer.desktop
-fi
-
-# remove Log Out app
-if [ -e /usr/share/applications/xfce4-session-logout.desktop ] ; then
-    echo "Hidden=true" >> /usr/share/applications/xfce4-session-logout.desktop
-fi
-
-### Firefox configuration ###
-
-if [ -e /etc/firefox-esr/firefox-esr.js ] ; then
-    cp /etc/firefox-esr/firefox-esr.js /etc/firefox-esr/firefox-esr.js.backup
-
-    cat >> /etc/firefox-esr/firefox-esr.js <<EOF
-
-// Force desktop versions of websites by hiding armv7l
-pref("general.useragent.override", "Mozilla/5.0 (X11; Linux; rv:45.0) Gecko/20100101 Firefox/45.0");
-EOF
 fi
 
 #DEBHELPER#

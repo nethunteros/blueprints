@@ -99,11 +99,6 @@ EOF
 deb http://http.kali.org/kali ${release} main contrib non-free
 EOF
 
-    # add maru apt repository for installing dependencies
-    cat > "${rootfs}/etc/apt/sources.list.d/maruos.list" <<EOF
-deb http://packages.maruos.com/debian ${DEFAULT_MARU_RELEASE}/
-EOF
-
     # disable any default.target
     # (LXC template symlinks to multi-user.target by default)
     local SYSTEMD_DEFAULT_TARGET="${rootfs}/etc/systemd/system/default.target"
@@ -116,10 +111,6 @@ EOF
     export LANGUAGE=C
     export LANG=C
 
-    pecho "building maru debpkg..."
-    make
-    cp maru*.deb "${rootfs}/tmp"
-
     pecho "configuring rootfs..."
     cp "$CHROOT_SCRIPT" "${rootfs}/tmp"
 
@@ -129,10 +120,6 @@ EOF
     fi
 
     chroot "$rootfs" bash -c "cd /tmp && ./${CHROOT_SCRIPT} $script_args"
-
-    # delete maru apt repository for now (upgrades not tested)
-    rm "${rootfs}/etc/apt/sources.list.d/maruos.list"
-
 }
 
 blueprint_build () {
