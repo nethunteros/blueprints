@@ -80,6 +80,13 @@ EOF
     mkdir -p $rootfs/selinux
     echo 0 > $rootfs/selinux/enforce
 
+    # android needs /dev/net/tun
+    sed --in-place "/exit 0/d" $rootfs/etc/rc.local 
+    echo "mkdir /dev/net" >> $rootfs/etc/rc.local 
+    echo "mknod /dev/net/tun c 10 200" >> $rootfs/etc/rc.local 
+    echo "chmod 0666 /dev/net/tun" >> $rootfs/etc/rc.local 
+    echo "exit 0" >> $rootfs/etc/rc.local 
+
     # configure the network using the dhcp
     cat <<EOF > $rootfs/etc/network/interfaces
 auto lo

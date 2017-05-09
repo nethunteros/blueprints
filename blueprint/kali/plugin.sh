@@ -35,8 +35,7 @@ if [ ! -f "/usr/share/debootstrap/scripts/kali-rolling" ]; then
     
     # For those not building on Kali
     echo "Missing kali from debootstrap"
-
-    curl "http://git.kali.org/gitweb/?p=packages/debootstrap.git;a=blob_plain;f=scripts/kali;h=50d7ef5b4e9e905cc6da8655416cdf3ef559911e;hb=refs/heads/kali/master" > /usr/share/debootstrap/scripts/kali
+    curl "http://git.kali.org/gitweb/?p=packages/debootstrap.git;a=blob_plain;f=scripts/kali;h=9ea085135dc4c5a44c6b5bc1383d41ebe2f796ac;hb=refs/heads/kali/master" > /usr/share/debootstrap/scripts/kali
     ln -s /usr/share/debootstrap/scripts/kali /usr/share/debootstrap/scripts/kali-rolling
 
     wget http://repo.kali.org/kali/pool/main/k/kali-archive-keyring/kali-archive-keyring_2015.2_all.deb
