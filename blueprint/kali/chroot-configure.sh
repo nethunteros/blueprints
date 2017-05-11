@@ -27,23 +27,11 @@ ristretto"
 install () {
     # first install "Recommends" since we overwrite some /etc config files
     apt-get -y install $RECOMMENDS_MIN
-
-    # install maru package (this will always return failed exit status)
-    dpkg -i maru_* || true
-
-    # install all missing packages in "Depends"
-    apt-get -y --allow-unauthenticated install -f
 }
 
 install_minimal () {
     # first install "Recommends" since we overwrite some /etc config files
     apt-get -y install --no-install-recommends $RECOMMENDS_MIN
-
-    # install maru package (this will always return failed exit status)
-    dpkg -i maru_* || true
-
-    # install all missing packages in "Depends"
-    apt-get -y --allow-unauthenticated install --no-install-recommends -f
 }
 
 OPT_MINIMAL=false
