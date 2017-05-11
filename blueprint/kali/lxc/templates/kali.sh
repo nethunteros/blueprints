@@ -236,7 +236,8 @@ network-manager-gnome,\
 xfce4,\
 xserver-xorg-video-fbdev,\
 xserver-xorg-input-evdev,\
-xserver-xorg-input-synaptics
+xserver-xorg-input-synaptics,\
+init
 
     cache=$1
     arch=$2
