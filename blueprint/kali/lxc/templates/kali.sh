@@ -37,7 +37,7 @@ MIRROR=${MIRROR:-http://repo.kali.org/kali}
 LOCALSTATEDIR="/var"
 LXC_TEMPLATE_CONFIG="/usr/share/lxc/config"
 
-configure_debian()
+configure_kali()
 {
     rootfs=$1
     hostname=$2
@@ -76,16 +76,9 @@ EOF
     [ -e "$rootfs/etc/mtab" ] && rm $rootfs/etc/mtab
     ln -s /proc/self/mounts $rootfs/etc/mtab
 
-    # disable selinux in debian
+    # disable selinux in kali
     mkdir -p $rootfs/selinux
     echo 0 > $rootfs/selinux/enforce
-
-    # android needs /dev/net/tun
-    sed --in-place "/exit 0/d" $rootfs/etc/rc.local 
-    echo "mkdir /dev/net" >> $rootfs/etc/rc.local 
-    echo "mknod /dev/net/tun c 10 200" >> $rootfs/etc/rc.local 
-    echo "chmod 0666 /dev/net/tun" >> $rootfs/etc/rc.local 
-    echo "exit 0" >> $rootfs/etc/rc.local 
 
     # configure the network using the dhcp
     cat <<EOF > $rootfs/etc/network/interfaces
@@ -98,26 +91,28 @@ EOF
 
     # set the hostname
     cat <<EOF > $rootfs/etc/hostname
-kali
+$hostname
 EOF
 
+    cat << EOF > $rootfs/debconf.set
+console-common console-data/keymap/policy select Select keymap from full list
+console-common console-data/keymap/full select en-latin1-nodeadkeys
+EOF
+
+    chroot $rootfs debconf-set-selections /debconf.set
+    rm -f $rootfs/debconf.set
+
     # reconfigure some services
-    if [ -z "$LANG" ]; then
-        chroot $rootfs locale-gen en_US.UTF-8 UTF-8
-        chroot $rootfs update-locale LANG=en_US.UTF-8
-    else
-        encoding=$(echo $LANG | cut -d. -f2)
-        chroot $rootfs sed -e "s/^# \(${LANG} ${encoding}\)/\1/" \
-            -i /etc/locale.gen 2> /dev/null
-        chroot $rootfs locale-gen $LANG $encoding
-        chroot $rootfs update-locale LANG=$LANG
-    fi
+
+    encoding=$(echo $LANG | cut -d. -f2)
+    chroot $rootfs sed -e "s/^# \(${LANG} ${encoding}\)/\1/" -i /etc/locale.gen 2> /dev/null
+    chroot $rootfs localedef -i en_US -f UTF-8 en_US.UTF-8
 
     # remove pointless services in a container
     chroot $rootfs /usr/sbin/update-rc.d -f checkroot.sh disable
     chroot $rootfs /usr/sbin/update-rc.d -f umountfs disable
     chroot $rootfs /usr/sbin/update-rc.d -f hwclock.sh disable
-    chroot $rootfs /usr/sbin/update-rc.d -f hwclockfirst.sh disable
+    #chroot $rootfs /usr/sbin/update-rc.d -f hwclockfirst.sh disable
 
     # generate new SSH keys
     if [ -x $rootfs/var/lib/dpkg/info/openssh-server.postinst ]; then
@@ -127,21 +122,14 @@ exit 101
 EOF
         chmod +x $rootfs/usr/sbin/policy-rc.d
 
-        if [ -f $rootfs/etc/init/ssh.conf ]; then
-            mv $rootfs/etc/init/ssh.conf $rootfs/etc/init/ssh.conf.disabled
-        fi
-
         rm -f $rootfs/etc/ssh/ssh_host_*key*
 
         DPKG_MAINTSCRIPT_PACKAGE=openssh DPKG_MAINTSCRIPT_NAME=postinst chroot $rootfs /var/lib/dpkg/info/openssh-server.postinst configure
-        sed -i "s/root@$(hostname)/root@kali/g" $rootfs/etc/ssh/ssh_host_*.pub
+        sed -i "s/root@$(hostname)/root@$hostname/g" $rootfs/etc/ssh/ssh_host_*.pub
 
-	# Don't allow root login with password
-	sed -i "s/PermitRootLogin yes/PermitRootLogin without-password/" $rootfs/etc/ssh/sshd_config
-
-        if [ -f "$rootfs/etc/init/ssh.conf.disabled" ]; then
-            mv $rootfs/etc/init/ssh.conf.disabled $rootfs/etc/init/ssh.conf
-        fi
+    #  Allow root login with password
+    sed -i -e "s/PermitRootLogin without-password/PermitRootLogin yes/" $rootfs/etc/ssh/sshd_config
+    sed -i -e 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' $rootfs/etc/ssh/sshd_config
 
         rm -f $rootfs/usr/sbin/policy-rc.d
     fi
@@ -158,13 +146,15 @@ EOF
         echo "Timezone in container is not configured. Adjust it manually."
     fi
 
-    echo "root:toor" | chroot $rootfs chpasswd
-    echo "Root password is toor, please change !"
+    password="toor"
+
+    echo "root:$password" | chroot $rootfs chpasswd
+    echo "Root password is '$password', please change !"
 
     return 0
 }
 
-configure_debian_systemd()
+configure_kali_systemd()
 {
     path=$1
     rootfs=$2
@@ -209,34 +199,26 @@ cleanup()
     rm -rf $cache/rootfs-$release-$arch
 }
 
-download_debian()
+download_kali()
 {
     packages=\
 ifupdown,\
 locales,\
+locales-all,\
+nano,\
+git,\
 dialog,\
 isc-dhcp-client,\
 netbase,\
 net-tools,\
 iproute,\
 openssh-server,\
+tzdata,\
 kali-archive-keyring,\
 kali-defaults,\
 kali-menu,\
 kali-root-login,\
-fonts-croscore,\
-fonts-crosextra-caladea,\
-fonts-crosextra-carlito,\
-gnome-theme-kali,\
-gtk3-engines-xfce,\
-kali-desktop-xfce,\
-lightdm,\
-network-manager,\
-network-manager-gnome,\
-xfce4,\
-xserver-xorg-video-fbdev,\
-xserver-xorg-input-evdev,\
-xserver-xorg-input-synaptics,\
+sudo,\
 init
 
     cache=$1
@@ -244,18 +226,18 @@ init
     release=$3
 
     trap cleanup EXIT SIGHUP SIGINT SIGTERM
-    # check the mini debian was not already downloaded
+    # check the mini kali was not already downloaded
     mkdir -p "$cache/partial-$release-$arch"
     if [ $? -ne 0 ]; then
         echo "Failed to create '$cache/partial-$release-$arch' directory"
         return 1
     fi
 
-    # download a mini debian into a cache
-    echo "Downloading debian minimal ..."
+    # download a mini kali into a cache
+    echo "Downloading kali minimal ..."
     qemu-debootstrap --verbose --variant=minbase --arch=$arch \
         --include=$packages \
-        "$release" "$cache/partial-$release-$arch" $MIRROR #/usr/share/debootstrap/scripts/kali
+        "$release" "$cache/partial-$release-$arch" $MIRROR /usr/share/debootstrap/scripts/kali
     if [ $? -ne 0 ]; then
         echo "Failed to download the rootfs, aborting."
         return 1
@@ -271,21 +253,21 @@ init
     return 0
 }
 
-copy_debian()
+copy_kali()
 {
     cache=$1
     arch=$2
     rootfs=$3
     release=$4
 
-    # make a local copy of the minidebian
+    # make a local copy of the minikali
     echo -n "Copying rootfs to $rootfs..."
     mkdir -p $rootfs
     rsync -Ha "$cache/rootfs-$release-$arch"/ $rootfs/ || return 1
     return 0
 }
 
-install_debian()
+install_kali()
 {
     cache="$LOCALSTATEDIR/cache/lxc/kali"
     rootfs=$1
@@ -301,14 +283,14 @@ install_debian()
 
         echo "Checking cache download in $cache/rootfs-$release-$arch ... "
         if [ ! -e "$cache/rootfs-$release-$arch" ]; then
-            download_debian $cache $arch $release
+            download_kali $cache $arch $release
             if [ $? -ne 0 ]; then
-                echo "Failed to download 'kali' base'"
+                echo "Failed to download 'kali base'"
                 return 1
             fi
         fi
 
-        copy_debian $cache $arch $rootfs $release
+        copy_kali $cache $arch $rootfs $release
         if [ $? -ne 0 ]; then
             echo "Failed to copy rootfs"
             return 1
@@ -356,7 +338,7 @@ copy_configuration()
 
     cat <<EOF >> $path/config
 lxc.mount = $path/fstab
-lxc.utsname = kali
+lxc.utsname = $hostname
 lxc.arch = $arch
 EOF
 
@@ -502,13 +484,13 @@ if [ -z "$rootfs" ]; then
 fi
 
 
-install_debian $rootfs $release $arch
+install_kali $rootfs $release $arch
 if [ $? -ne 0 ]; then
     echo "failed to install kali"
     exit 1
 fi
 
-configure_debian $rootfs $name
+configure_kali $rootfs $name
 if [ $? -ne 0 ]; then
     echo "failed to configure kali for a container"
     exit 1
@@ -520,7 +502,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-configure_debian_systemd $path $rootfs
+configure_kali_systemd $path $rootfs
 
 if [ ! -z $clean ]; then
     clean || exit 1
