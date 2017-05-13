@@ -42,6 +42,9 @@ configure_kali()
     rootfs=$1
     hostname=$2
 
+    # Add _apt user. Unsure why this isn't getting added....
+    echo "_apt:x:104:3004::/nonexistent:/bin/false" >> $rootfs/etc/pass
+
     # squeeze only has /dev/tty and /dev/tty0 by default,
     # therefore creating missing device nodes for tty1-4.
     for tty in $(seq 1 4); do
@@ -81,6 +84,7 @@ EOF
     echo 0 > $rootfs/selinux/enforce
 
     # configure the network using the dhcp
+    mkdir -p $rootfs/etc/network
     cat <<EOF > $rootfs/etc/network/interfaces
 auto lo
 iface lo inet loopback
@@ -202,6 +206,8 @@ cleanup()
 download_kali()
 {
     packages=\
+gnupg1,\
+dirmngr,\
 ifupdown,\
 locales,\
 locales-all,\

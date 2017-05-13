@@ -24,6 +24,8 @@ vim-tiny
 firefox-esr
 ristretto"
 
+apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
+
 install () {
     # first install "Recommends" since we overwrite some /etc config files
     apt-get -y install $RECOMMENDS_MIN
