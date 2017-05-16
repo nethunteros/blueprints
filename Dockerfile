@@ -6,6 +6,7 @@ RUN apt-get update && apt-get install -y \
     fakeroot \
     git \
     lxc \
+    curl \
     make \
     qemu \
     qemu-user-static \

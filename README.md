@@ -25,7 +25,7 @@ To create your own blueprint, all you need to do is:
 ## Prerequiste
 
 ```
-apt install qemu-user-binfmt qemu-user-static debootstrap curl  
+apt install qemu-user-binfmt qemu-user-static debootstrap curl cgmanager
 update-binfmts --importdir /var/lib/binfmts/ --import
 update-binfmts --install qemu-arm
 update-binfmts --enable
@@ -43,9 +43,8 @@ Build a Kali arm64 container called 'kali-rolling64':
 
 Docker build:
 
-	# ./docker build -t lxcbuilder .
-	# ./docker run docker run -ti --privileged=true lxcbuilder
-	#
+	# docker build -t lxcbuilder .
+	# docker run -ti --privileged=true lxcbuilder
 
 *Tip: You will need root privileges to mount binfmt_misc for bootstrapping
 foreign architecture containers.*
