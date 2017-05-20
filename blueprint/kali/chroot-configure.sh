@@ -22,7 +22,24 @@ set -e
 readonly RECOMMENDS_MIN="xfce4-terminal
 vim-tiny
 firefox-esr
-ristretto"
+ristretto
+sysvinit-core
+sysvinit-utils
+nano
+fonts-croscore
+fonts-crosextra-caladea
+fonts-crosextra-carlito
+gnome-theme-kali
+gtk3-engines-xfce
+kali-desktop-xfce
+kali-root-login
+lightdm network-manager
+network-manager-gnome
+xfce4
+xserver-xorg-video-fbdev
+xserver-xorg-input-evdev
+xserver-xorg-input-synaptics
+"
 
 apt-key adv --keyserver hkp://keys.gnupg.net --recv-keys 7D8D0BF6
 
@@ -78,6 +95,12 @@ apt-get -y purge xscreensaver xscreensaver-data
 apt-get -y autoremove
 apt-get autoclean
 apt-get clean
+
+# remove systemd
+cp /usr/share/sysvinit/inittab /etc/inittab 
+apt-get -y --force-yes -qq remove --purge --auto-remove systemd
+echo -e 'Package: systemd\nPin: release *\nPin-Priority: -1' > /etc/apt/preferences.d/systemd 
+echo -e '\n\nPackage: *systemd*\nPin: release *\nPin-Priority: -1' >> /etc/apt/preferences.d/systemd 
 
 # clean package lists (this can be recreated with apt-get update)
 rm -rf /var/lib/apt/lists/*

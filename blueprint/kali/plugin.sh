@@ -30,7 +30,7 @@ readonly LXC_TEMPLATE_OVERRIDE="$(pwd)/lxc/templates/kali.sh"
 # script to run inside the chroot
 readonly CHROOT_SCRIPT="chroot-configure.sh"
 
-# Get deboostrap for kali
+# Get deboostrap for kali and keys
 if [ ! -f "/usr/share/debootstrap/scripts/kali-rolling" ]; then
     
     # For those not building on Kali

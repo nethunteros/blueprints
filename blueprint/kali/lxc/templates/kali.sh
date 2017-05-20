@@ -95,7 +95,7 @@ EOF
 
     # set the hostname
     cat <<EOF > $rootfs/etc/hostname
-$hostname
+kali
 EOF
 
     cat << EOF > $rootfs/debconf.set
@@ -129,7 +129,7 @@ EOF
         rm -f $rootfs/etc/ssh/ssh_host_*key*
 
         DPKG_MAINTSCRIPT_PACKAGE=openssh DPKG_MAINTSCRIPT_NAME=postinst chroot $rootfs /var/lib/dpkg/info/openssh-server.postinst configure
-        sed -i "s/root@$(hostname)/root@$hostname/g" $rootfs/etc/ssh/ssh_host_*.pub
+        sed -i "s/root@$(hostname)/root@kali/g" $rootfs/etc/ssh/ssh_host_*.pub
 
     #  Allow root login with password
     sed -i -e "s/PermitRootLogin without-password/PermitRootLogin yes/" $rootfs/etc/ssh/sshd_config
@@ -221,11 +221,7 @@ iproute,\
 openssh-server,\
 tzdata,\
 kali-archive-keyring,\
-kali-defaults,\
-kali-menu,\
-kali-root-login,\
-sudo,\
-init
+sudo
 
     cache=$1
     arch=$2
@@ -344,7 +340,7 @@ copy_configuration()
 
     cat <<EOF >> $path/config
 lxc.mount = $path/fstab
-lxc.utsname = $hostname
+lxc.utsname = kali
 lxc.arch = $arch
 EOF
 
